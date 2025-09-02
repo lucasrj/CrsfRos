@@ -20,7 +20,8 @@ void callback(const crsf::CRSFFrame* frame, const crsf::Frame_status status) {
       std::cout << "channel 1 :" << std::setw(4) << channels.channels[0] << "  channel 2 :" << std::setw(4)
                 << channels.channels[1] << "  channel 3 :" << std::setw(4) << channels.channels[2]
                 << "  channel 4 :" << std::setw(4) << channels.channels[3] << "  channel 5 :" << std::setw(4)
-                << channels.channels[4] << "  channel 6 :" << std::setw(4) << channels.channels[5]  << " crc check :"<< int(status) << std::endl;
+                << channels.channels[4] << "  channel 6 :" << std::setw(4) << channels.channels[5]
+                << " crc check :" << int(status) << std::endl;
     }
   }
   return;
