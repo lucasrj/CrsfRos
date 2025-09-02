@@ -4,6 +4,14 @@
 #include <stdexcept>
 namespace crsf {
 
+
+CRSFFrame::CRSFFrame(std::vector<uint8_t> data){
+    length = data[0];
+    type = MSG_TYPES(data[1]);
+    payload.insert(payload.begin(),data.begin()+2,data.begin()+length);
+    crc = data[length];
+  }
+
 MSG_RC_Channels::MSG_RC_Channels(const CRSFFrame& frame, uint8_t type) {
   if (frame.type != MSG_TYPES::RC_CHANNELS_PACKED_PAYLOAD)
     throw std::invalid_argument("not of type RC_CHANNELS_PACKED_PAYLOAD");
@@ -13,7 +21,6 @@ MSG_RC_Channels::MSG_RC_Channels(const CRSFFrame& frame, uint8_t type) {
 
   if (type > 1)
     throw std::invalid_argument("invalid type");
-  // const uint8_t* p = frame.payload.data();
 
   for (int i = 0; i < channels.size(); i++)
   {
