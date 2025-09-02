@@ -19,12 +19,6 @@ enum class Frame_status : int8_t {
   ok = 1,
 };
 
-enum class Parser_Status : uint8_t {
-  WAIT_SYNC,    // Waiting for sync byte
-  READ_LENGTH,  // Got sync, now reading length
-  READ_DATA,    // Reading payload bytes
-};
-
 class CRSFInterface {
 private:
   CRSFInterface(const CRSFInterface&) = delete;
@@ -47,11 +41,10 @@ public:
 
 protected:
   ReceivedCb message_cb_;
-  void parse_buffer(uint8_t* buf, const size_t bufsize, size_t bytes_received);
+  void parse_buffer(uint8_t* buf, size_t bytes_received);
   uint8_t crc_calc(CRSFFrame& frame);
 
 private:
-  void parse_frame_from_vector();
   bool crc_check(CRSFFrame& frame) {
     return frame.crc == crc_calc(frame);
   };
@@ -59,8 +52,8 @@ private:
   const uint8_t SYNC_BYTE = 0xC8;
 
   std::vector<uint8_t> parser_buffer_;
+  bool parser_frame_started = false;
   uint8_t parser_frame_size_ = 0;
-  Parser_Status parser_status_ = Parser_Status::WAIT_SYNC;
 
   ADDRESS_TYPE address_ = ADDRESS_TYPE::FLIGHT_CONTROLLER;
 

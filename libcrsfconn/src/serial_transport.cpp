@@ -135,7 +135,7 @@ void CRSFSerial::read(void) {
                                   sthis->close();
                                   return;
                                 }
-                                sthis->parse_buffer(sthis->rx_buf_.data(), sthis->rx_buf_.size(), byte_transferred);
+                                sthis->parse_buffer(sthis->rx_buf_.data(), byte_transferred);
                                 sthis->read();
                               }
 

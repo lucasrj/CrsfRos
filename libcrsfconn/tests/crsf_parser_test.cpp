@@ -26,7 +26,7 @@ public:
   }
 
   void receive_data(uint8_t* ptr, uint8_t length) {
-    parse_buffer(ptr, length, length);
+    parse_buffer(ptr, length);
   }
 
   void send_msg(const crsf::CRSFFrame* /*message*/) override {
