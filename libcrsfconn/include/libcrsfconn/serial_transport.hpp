@@ -35,7 +35,7 @@ private:
   asio::serial_port serial_dev_;
 
   std::recursive_mutex mutex_;
-  std::array<uint8_t, CRSFFrame::MAX_SIZE*4> rx_buf_;
+  std::array<uint8_t, CRSFFrame::MAX_SIZE> rx_buf_;
 
   void read();
   void write(bool check_tx_state);
