@@ -2,6 +2,7 @@
 
 #include <sys/types.h>
 
+#include <array>
 #include <cstdint>
 #include <limits>
 #include <vector>
@@ -82,22 +83,7 @@ struct CRSFExtendedFrame
 
 struct MSG_RC_Channels
 {
-  int channel_01;
-  int channel_02;
-  int channel_03;
-  int channel_04;
-  int channel_05;
-  int channel_06;
-  int channel_07;
-  int channel_08;
-  int channel_09;
-  int channel_10;
-  int channel_11;
-  int channel_12;
-  int channel_13;
-  int channel_14;
-  int channel_15;
-  int channel_16;
+  std::array<int, 16> channels = { 0 };
 
   static const uint8_t TYPE_TICKS = 0;
   static const uint8_t TYPE_US = 1;
@@ -110,6 +96,26 @@ struct MSG_RC_Channels
   static int US_TO_TICKS(int x) {
     return ((x - 1500) * 8 / 5 + 992);
   }
+
+private:
+  uint16_t get_channel(const uint8_t* buf, int i);
+};
+
+struct MSG_Link_Statistics
+{
+  uint8_t up_rssi_ant1;       // Uplink RSSI Antenna 1 (dBm * -1)
+  uint8_t up_rssi_ant2;       // Uplink RSSI Antenna 2 (dBm * -1)
+  uint8_t up_link_quality;    // Uplink Package success rate / Link quality (%)
+  int8_t up_snr;              // Uplink SNR (dB)
+  uint8_t active_antenna;     // number of currently best antenna
+  uint8_t rf_profile;         // enum {4fps = 0 , 50fps, 150fps}
+  uint8_t up_rf_power;        // enum {0mW = 0, 10mW, 25mW, 100mW,
+                              // 500mW, 1000mW, 2000mW, 250mW, 50mW}
+  uint8_t down_rssi;          // Downlink RSSI (dBm * -1)
+  uint8_t down_link_quality;  // Downlink Package success rate / Link quality (%)
+  int8_t down_snr;            // Downlink SNR (dB)
+
+  MSG_Link_Statistics(const CRSFFrame& frame);
 };
 
 }  // namespace crsf
