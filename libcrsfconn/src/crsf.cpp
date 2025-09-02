@@ -21,7 +21,7 @@ void CRSFInterface::parse_frame_from_vector() {
     frame.length = parser_buffer_[0];
     frame.type = MSG_TYPES(parser_buffer_[1]);
     // std::cout << "frame size " << unsigned(frame.length) << std::endl;
-    frame.payload.reserve(frame.length);
+    frame.payload.reserve(frame.length-2);
     frame.payload.insert(frame.payload.begin(), parser_buffer_.begin() + 2, parser_buffer_.begin() + frame.length);
     frame.crc = parser_buffer_[frame.length];
     // std::cout << "parse_frame_from_vector " << std::endl;
@@ -39,58 +39,61 @@ void CRSFInterface::parse_frame_from_vector() {
       message_cb_(&frame, frame_status);
     }
   }
-  parser_buffer_.erase(parser_buffer_.begin(), parser_buffer_.begin() + parser_frame_size_);
+  parser_buffer_.erase(parser_buffer_.begin(), parser_buffer_.begin() + parser_frame_size_+1);
   parser_status_ = Parser_Status::WAIT_SYNC;
 }
 
 uint8_t CRSFInterface::crc_calc(CRSFFrame& frame) {
   uint8_t crc = crc8tab[0 ^ uint8_t(frame.type)];
-  for (uint8_t i : frame.payload)
-    crc = crc8tab[crc ^ i];
+  for (int i = 0 ;i < frame.payload.size();i++)
+    crc = crc8tab[crc ^ frame.payload[i]];
   return crc;
 }
 
 void CRSFInterface::parse_buffer(uint8_t* buf, const size_t bufsize, size_t bytes_received [[maybe_unused]]) {
   uint8_t* buf_end = buf + bufsize;
   parser_buffer_.insert(parser_buffer_.end(), buf, buf_end);
-  switch (parser_status_)
+  do
   {
-    case Parser_Status::WAIT_SYNC: {
-      auto pos = std::find(parser_buffer_.begin(), parser_buffer_.end(), SYNC_BYTE);
-      if (pos == parser_buffer_.end())
+    switch (parser_status_)
+    {
+      case Parser_Status::WAIT_SYNC: {
+        auto pos = std::find(parser_buffer_.begin(), parser_buffer_.end(), SYNC_BYTE);
+        if (pos == parser_buffer_.end())
+          break;
+
+        parser_buffer_.erase(parser_buffer_.begin(), pos + 1);
+        parser_status_ = Parser_Status::READ_LENGTH;
+
+        if (parser_buffer_.size() == 0)
+          break;
+
+        [[fallthrough]];
+      }
+      case Parser_Status::READ_LENGTH:
+        parser_frame_size_ = parser_buffer_[0];
+        if (parser_frame_size_ > 62 || parser_frame_size_ < 2)
+        {
+          parser_frame_size_ = 0;
+          parser_status_ = Parser_Status::WAIT_SYNC;
+          break;
+        }
+        parser_status_ = Parser_Status::READ_DATA;
+
+        [[fallthrough]];
+
+      case Parser_Status::READ_DATA:
+
+        if (parser_buffer_.size() >= parser_frame_size_ + 1)
+        {
+          parse_frame_from_vector();
+        }
         break;
-
-      parser_buffer_.erase(parser_buffer_.begin(), pos + 1);
-      parser_status_ = Parser_Status::READ_LENGTH;
-
-      if (parser_buffer_.size() == 0)
-        break;
-
-      [[fallthrough]];
     }
-    case Parser_Status::READ_LENGTH:
-      parser_frame_size_ = parser_buffer_[0];
-      if (parser_frame_size_ > 64 || parser_frame_size_ <= 0)
-      {
-        parser_frame_size_ = 0;
-        parser_status_ = Parser_Status::WAIT_SYNC;
-        break;
-      }
-      parser_status_ = Parser_Status::READ_DATA;
-
-      [[fallthrough]];
-
-    case Parser_Status::READ_DATA:
-
-      if (parser_buffer_.size() >= parser_frame_size_ + 1)
-      {
-        parse_frame_from_vector();
-      }
-      break;
-  }
-  if (parser_buffer_.size() > 400)
+  } while (parser_status_ == Parser_Status::WAIT_SYNC && std::find(parser_buffer_.begin(), parser_buffer_.end(), SYNC_BYTE) != parser_buffer_.end());
+  if (parser_buffer_.size() > CRSFFrame::MAX_SIZE * 2)
   {
-    parser_buffer_.erase(parser_buffer_.begin(), parser_buffer_.end() - 255);
+    parser_buffer_.erase(parser_buffer_.begin(), parser_buffer_.end() - CRSFFrame::MAX_SIZE * 2);
     parser_frame_size_ = 0;
     parser_status_ = Parser_Status::WAIT_SYNC;
   }

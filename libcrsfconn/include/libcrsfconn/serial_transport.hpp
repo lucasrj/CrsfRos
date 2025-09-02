@@ -12,7 +12,7 @@ public:
   using Ptr = std::shared_ptr<CRSFSerial>;
   virtual ~CRSFSerial();
 
-  static Ptr create_crsf_serial(std::string device = "/dev/ttyACM0", unsigned baudrate = 420000, bool hwflow = false,
+  static Ptr create_crsf_serial(std::string device = "/dev/ttyACM0", unsigned baudrate = 416666, bool hwflow = false,
                                 ADDRESS_TYPE address = ADDRESS_TYPE::FLIGHT_CONTROLLER) {
     return Ptr(new CRSFSerial(device, baudrate, hwflow, address));
   };
@@ -35,7 +35,7 @@ private:
   asio::serial_port serial_dev_;
 
   std::recursive_mutex mutex_;
-  std::array<uint8_t, CRSFFrame::MAX_SIZE> rx_buf_;
+  std::array<uint8_t, CRSFFrame::MAX_SIZE*4> rx_buf_;
 
   void read();
   void write(bool check_tx_state);
