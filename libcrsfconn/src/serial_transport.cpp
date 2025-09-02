@@ -61,13 +61,13 @@ CRSFSerial::CRSFSerial(std::string device, unsigned baudrate, bool hwflow, ADDRE
     tio.c_ispeed = baudrate;  // Input speed
     tio.c_ospeed = baudrate;  // Output speed
 
-    tio.c_cc[VMIN] = 0;   // Minimum chars to read
-    tio.c_cc[VTIME] = 1;  // Timeout in 0.1 sec (i.e., 1 second)
+    // tio.c_cc[VMIN] = 0;   // Minimum chars to read
+    // tio.c_cc[VTIME] = 1;  // Timeout in 0.1 sec (i.e., 1 second)
 
-    tio.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL | IXON|INPCK);
+    tio.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL | IXON | INPCK);
     tio.c_oflag &= ~(OPOST | ONLCR | OCRNL);
     tio.c_lflag &= ~(ICANON | ECHO | ECHOE | ECHOK | ECHONL | ISIG | IEXTEN);
-    tio.c_cflag &= ~(CSIZE | PARENB|PARODD|CMSPAR);
+    tio.c_cflag &= ~(CSIZE | PARENB | PARODD | CMSPAR);
     tio.c_cflag |= CS8;
     tio.c_cflag &= ~CSTOPB;
 
