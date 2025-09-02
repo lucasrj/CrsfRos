@@ -62,7 +62,7 @@ enum class ADDRESS_TYPE : uint8_t {
 
 struct CRSFFrame
 {
-  static constexpr ssize_t MAX_SIZE = std::numeric_limits<uint8_t>::max();
+  static constexpr ssize_t MAX_SIZE = 64;
   uint8_t length;
   MSG_TYPES type;
   std::vector<uint8_t> payload;
@@ -71,7 +71,7 @@ struct CRSFFrame
 
 struct CRSFExtendedFrame
 {
-  static constexpr ssize_t MAX_SIZE = std::numeric_limits<uint8_t>::max();
+  static constexpr ssize_t MAX_SIZE = 64;
   uint8_t length;
   uint8_t type;
   uint8_t dist;
