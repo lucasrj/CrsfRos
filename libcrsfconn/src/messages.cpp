@@ -12,6 +12,16 @@ CRSFFrame::CRSFFrame(std::vector<uint8_t> data){
     crc = data[length];
   }
 
+std::vector<uint8_t> CRSFFrame::serialize() const {
+  std::vector<uint8_t> data;
+  data.reserve(length + 2);
+  data.push_back(SYNC_BYTE);
+  data.push_back(length);
+  data.push_back(uint8_t(type));
+  data.insert(data.end(), payload.begin(), payload.end());
+  data.push_back(crc);
+  return data;
+}
 
 uint8_t CRSFFrame::crc_calc(const CRSFFrame& frame) {
   uint8_t crc = crc8tab[0 ^ uint8_t(frame.type)];
