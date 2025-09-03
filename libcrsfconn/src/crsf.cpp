@@ -13,17 +13,10 @@ CRSFInterface::CRSFInterface(ADDRESS_TYPE address) {
   parser_buffer_.reserve(CRSFFrame::MAX_SIZE);
 }
 
-uint8_t CRSFInterface::crc_calc(CRSFFrame& frame) {
-  uint8_t crc = crc8tab[0 ^ uint8_t(frame.type)];
-  for (int i = 0; i < frame.payload.size(); i++)
-    crc = crc8tab[crc ^ frame.payload[i]];
-  return crc;
-}
-
 void CRSFInterface::parse_buffer(uint8_t* buf, size_t bytes_received [[maybe_unused]]) {
   for (size_t i = 0; i < bytes_received; ++i)
   {
-    if (!parser_frame_started && buf[i] == SYNC_BYTE)
+    if (!parser_frame_started && buf[i] == CRSFFrame::SYNC_BYTE)
     {
       parser_frame_started = true;
     }

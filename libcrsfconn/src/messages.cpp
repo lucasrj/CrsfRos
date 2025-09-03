@@ -12,6 +12,14 @@ CRSFFrame::CRSFFrame(std::vector<uint8_t> data){
     crc = data[length];
   }
 
+
+uint8_t CRSFFrame::crc_calc(const CRSFFrame& frame) {
+  uint8_t crc = crc8tab[0 ^ uint8_t(frame.type)];
+  for (int i = 0; i < frame.payload.size(); i++)
+    crc = crc8tab[crc ^ frame.payload[i]];
+  return crc;
+}
+
 MSG_RC_Channels::MSG_RC_Channels(const CRSFFrame& frame, uint8_t type) {
   if (frame.type != MSG_TYPES::RC_CHANNELS_PACKED_PAYLOAD)
     throw std::invalid_argument("not of type RC_CHANNELS_PACKED_PAYLOAD");
