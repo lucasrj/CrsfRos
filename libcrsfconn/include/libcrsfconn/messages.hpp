@@ -146,6 +146,32 @@ struct MSG_Link_Statistics
 
   CRSFFrame toFrame();
 };
+
+struct MSG_Attitude
+{
+  int16_t pitch;  // Pitch angle (LSB = 100 µrad)
+  int16_t roll;   // Roll angle  (LSB = 100 µrad)
+  int16_t yaw;    // Yaw angle   (LSB = 100 µrad)
+
+  MSG_Attitude() = default;
+  MSG_Attitude(const CRSFFrame& frame);
+  MSG_Attitude(float roll, float pitch, float yaw) {
+    this->pitch = static_cast<int16_t>(pitch * 10000.0f);
+    this->roll = static_cast<int16_t>(roll * 10000.0f);
+    this->yaw = static_cast<int16_t>(yaw * 10000.0f);
+  }
+
+  void setpitch(float pitch) {
+    this->pitch = (int16_t)(pitch * 10000.0f);
+  }
+  void setroll(float roll) {
+    this->roll = (int16_t)(roll * 10000.0f);
+  }
+  void setyaw(float yaw) {
+    this->yaw = (int16_t)(yaw * 10000.0f);
+  }
+
+  CRSFFrame toFrame();
 };
 
 }  // namespace crsf

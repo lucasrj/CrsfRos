@@ -139,4 +139,26 @@ CRSFFrame MSG_Link_Statistics::toFrame() {
   return frame;
 }
 
+MSG_Attitude::MSG_Attitude(const CRSFFrame& frame) {
+}
+
+CRSFFrame MSG_Attitude::toFrame() {
+  CRSFFrame frame;
+  frame.length = 8;
+  frame.type = MSG_TYPES::ATTITUDE;
+  frame.payload.resize(6);
+
+  // pitch
+  frame.payload[0] = (pitch >> 8) & 0xFF;
+  frame.payload[1] = pitch & 0xFF;
+  // roll
+  frame.payload[2] = (roll >> 8) & 0xFF;
+  frame.payload[3] = roll & 0xFF;
+  // yaw
+  frame.payload[4] = (yaw >> 8) & 0xFF;
+  frame.payload[5] = yaw & 0xFF;
+  frame.crc = CRSFFrame::crc_calc(frame);
+  return frame;
+}
+
 }  // namespace crsf
