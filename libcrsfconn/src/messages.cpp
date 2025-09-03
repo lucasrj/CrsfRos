@@ -2,15 +2,15 @@
 #include <libcrsfconn/messages.hpp>
 #include <cstdint>
 #include <stdexcept>
+#include <vector>
 namespace crsf {
 
-
-CRSFFrame::CRSFFrame(std::vector<uint8_t> data){
-    length = data[0];
-    type = MSG_TYPES(data[1]);
-    payload.insert(payload.begin(),data.begin()+2,data.begin()+length);
-    crc = data[length];
-  }
+CRSFFrame::CRSFFrame(std::vector<uint8_t> data) {
+  length = data[0];
+  type = MSG_TYPES(data[1]);
+  payload.insert(payload.begin(), data.begin() + 2, data.begin() + length);
+  crc = data[length];
+}
 
 std::vector<uint8_t> CRSFFrame::serialize() const {
   std::vector<uint8_t> data;
