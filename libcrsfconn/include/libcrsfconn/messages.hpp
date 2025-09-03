@@ -174,4 +174,62 @@ struct MSG_Attitude
   CRSFFrame toFrame();
 };
 
+struct MSG_GPS
+{
+  int32_t latitude;      // degree / 10`000`000
+  int32_t longitude;     // degree / 10`000`000
+  uint16_t groundspeed;  // km/h / 100
+  uint16_t heading;      // degree / 100
+  uint16_t altitude;     // meter - 1000m offset
+  uint8_t satellites;    // # of sats in view
+
+  MSG_GPS() = default;
+  MSG_GPS(const CRSFFrame& frame);
+  CRSFFrame toFrame();
+};
+
+struct MSG_GPS_Time
+{
+  int16_t year;
+  uint8_t month;
+  uint8_t day;
+  uint8_t hour;
+  uint8_t minute;
+  uint8_t second;
+  uint16_t millisecond;
+
+  MSG_GPS_Time() = default;
+  MSG_GPS_Time(const CRSFFrame& frame);
+  CRSFFrame toFrame();
+};
+
+struct MSG_GPS_Extended
+{
+  uint8_t fix_type;       // Current GPS fix quality
+  int16_t n_speed;        // Northward (north = positive) Speed [cm/sec]
+  int16_t e_speed;        // Eastward (east = positive) Speed [cm/sec]
+  int16_t v_speed;        // Vertical (up = positive) Speed [cm/sec]
+  int16_t h_speed_acc;    // Horizontal Speed accuracy cm/sec
+  int16_t track_acc;      // Heading accuracy in degrees scaled with 1e-1 degrees times 10)
+  int16_t alt_ellipsoid;  // Meters Height above GPS Ellipsoid (not MSL)
+  int16_t h_acc;          // horizontal accuracy in cm
+  int16_t v_acc;          // vertical accuracy in cm
+  uint8_t reserved;
+  uint8_t hDOP;  // Horizontal dilution of precision,Dimensionless in nits of.1.
+  uint8_t vDOP;  // vertical dilution of precision, Dimensionless in nits of .1.
+
+  MSG_GPS_Extended() = default;
+  MSG_GPS_Extended(const CRSFFrame& frame);
+  CRSFFrame toFrame();
+};
+
+struct MSG_Variometer
+{
+  int16_t v_speed;  // Vertical speed cm/s
+
+  MSG_Variometer() = default;
+  MSG_Variometer(const CRSFFrame& frame);
+  CRSFFrame toFrame();
+};
+
 }  // namespace crsf

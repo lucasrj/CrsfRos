@@ -140,6 +140,11 @@ CRSFFrame MSG_Link_Statistics::toFrame() {
 }
 
 MSG_Attitude::MSG_Attitude(const CRSFFrame& frame) {
+  const uint8_t* data = frame.payload.data();
+
+  pitch = ((int16_t)data[0] << 8) | ((int16_t)data[1]);
+  roll = ((int16_t)data[2] << 8) | ((int16_t)data[3]);
+  yaw = ((int16_t)data[4] << 8) | ((int16_t)data[5]);
 }
 
 CRSFFrame MSG_Attitude::toFrame() {
@@ -157,6 +162,143 @@ CRSFFrame MSG_Attitude::toFrame() {
   // yaw
   frame.payload[4] = (yaw >> 8) & 0xFF;
   frame.payload[5] = yaw & 0xFF;
+  frame.crc = CRSFFrame::crc_calc(frame);
+  return frame;
+}
+
+MSG_GPS::MSG_GPS(const CRSFFrame& frame) {
+  const uint8_t* data = frame.payload.data();
+
+  longitude = ((int32_t)data[0] << 24) | ((int32_t)data[1] << 16) | ((int32_t)data[2] << 8) | (int32_t)data[3];
+
+  latitude = ((int32_t)data[4] << 24) | ((int32_t)data[5] << 16) | ((int32_t)data[6] << 8) | (int32_t)data[7];
+
+  groundspeed = ((uint16_t)data[8] << 8) | (uint16_t)data[9];
+  heading = ((uint16_t)data[10] << 8) | (uint16_t)data[11];
+  altitude = ((uint16_t)data[12] << 8) | (uint16_t)data[13];
+
+  satellites = data[14];
+}
+
+CRSFFrame MSG_GPS::toFrame() {
+  CRSFFrame frame;
+  frame.length = 17;
+  frame.type = MSG_TYPES::GPS;
+  frame.payload.resize(15);
+
+  frame.payload[0] = (longitude >> 24) & 0xFF;
+  frame.payload[1] = (longitude >> 16) & 0xFF;
+  frame.payload[2] = (longitude >> 8) & 0xFF;
+  frame.payload[3] = (longitude) & 0xFF;
+
+  frame.payload[4] = (latitude >> 24) & 0xFF;
+  frame.payload[5] = (latitude >> 16) & 0xFF;
+  frame.payload[6] = (latitude >> 8) & 0xFF;
+  frame.payload[7] = (latitude) & 0xFF;
+
+  frame.payload[8] = (groundspeed >> 8) & 0xFF;
+  frame.payload[9] = (groundspeed) & 0xFF;
+
+  frame.payload[10] = (heading >> 8) & 0xFF;
+  frame.payload[11] = (heading) & 0xFF;
+
+  frame.payload[12] = (altitude >> 8) & 0xFF;
+  frame.payload[13] = (altitude) & 0xFF;
+
+  frame.payload[14] = satellites;
+
+  frame.crc = CRSFFrame::crc_calc(frame);
+  return frame;
+}
+
+MSG_GPS_Time::MSG_GPS_Time(const CRSFFrame& frame) {
+  const uint8_t* data = frame.payload.data();
+
+  year = (int16_t)data[0] | ((int16_t)data[1] << 8);
+  month = data[2];
+  day = data[3];
+  hour = data[4];
+  minute = data[5];
+  second = data[6];
+  millisecond = (uint16_t)data[7] | ((uint16_t)data[8] << 8);
+}
+
+CRSFFrame MSG_GPS_Time::toFrame() {
+  CRSFFrame frame;
+  frame.length = 11;
+  frame.type = MSG_TYPES::GPS_TIME;
+  frame.payload.resize(9);
+
+  frame.payload[0] = (year >> 8) & 0xFF;
+  frame.payload[1] = (year) & 0xFF;
+
+  frame.payload[2] = month;
+  frame.payload[3] = day;
+  frame.payload[4] = hour;
+  frame.payload[5] = minute;
+  frame.payload[6] = second;
+
+  frame.payload[7] = (millisecond >> 8) & 0xFF;
+  frame.payload[8] = (millisecond) & 0xFF;
+
+  frame.crc = CRSFFrame::crc_calc(frame);
+  return frame;
+}
+
+MSG_GPS_Extended::MSG_GPS_Extended(const CRSFFrame& frame) {
+  const uint8_t* data = frame.payload.data();
+
+  fix_type = data[0];
+  n_speed = (int16_t)data[1] | ((int16_t)data[2] << 8);
+  e_speed = (int16_t)data[3] | ((int16_t)data[4] << 8);
+  v_speed = (int16_t)data[5] | ((int16_t)data[6] << 8);
+  h_speed_acc = (int16_t)data[7] | ((int16_t)data[8] << 8);
+  track_acc = (int16_t)data[9] | ((int16_t)data[10] << 8);
+  alt_ellipsoid = (int16_t)data[11] | ((int16_t)data[12] << 8);
+  h_acc = (int16_t)data[13] | ((int16_t)data[14] << 8);
+  v_acc = (int16_t)data[15] | ((int16_t)data[16] << 8);
+  reserved = data[17];
+  hDOP = data[18];
+  vDOP = data[19];
+}
+
+CRSFFrame MSG_GPS_Extended::toFrame() {
+  CRSFFrame frame;
+  frame.length = 22;
+  frame.type = MSG_TYPES::GPS_TIME;
+  frame.payload.resize(20);
+
+  frame.payload[0] = fix_type;
+
+  frame.payload[1] = (n_speed >> 8) & 0xFF;
+  frame.payload[2] = (n_speed) & 0xFF;
+
+  frame.payload[3] = (e_speed >> 8) & 0xFF;
+  frame.payload[4] = (e_speed) & 0xFF;
+
+  frame.payload[5] = (v_speed >> 8) & 0xFF;
+  frame.payload[6] = (v_speed) & 0xFF;
+
+  frame.payload[7] = (h_speed_acc >> 8) & 0xFF;
+  frame.payload[8] = (h_speed_acc) & 0xFF;
+
+  frame.payload[9] = (track_acc >> 8) & 0xFF;
+  frame.payload[10] = (track_acc) & 0xFF;
+
+  frame.payload[11] = (alt_ellipsoid >> 8) & 0xFF;
+  frame.payload[12] = (alt_ellipsoid) & 0xFF;
+
+  frame.payload[13] = (h_acc >> 8) & 0xFF;
+  frame.payload[14] = (h_acc) & 0xFF;
+
+  frame.payload[15] = (v_acc >> 8) & 0xFF;
+  frame.payload[16] = (v_acc) & 0xFF;
+
+  frame.payload[17] = reserved;
+
+  frame.payload[18] = hDOP;
+  frame.payload[19] = vDOP;
+
   frame.crc = CRSFFrame::crc_calc(frame);
   return frame;
 }
