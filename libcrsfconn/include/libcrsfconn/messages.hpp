@@ -122,6 +122,8 @@ struct MSG_RC_Channels
     return ((x - 1500) * 8 / 5 + 992);
   }
 
+  CRSFFrame toFrame();
+
 private:
   uint16_t get_channel(const uint8_t* buf, int i);
 };
@@ -141,6 +143,9 @@ struct MSG_Link_Statistics
   int8_t down_snr;            // Downlink SNR (dB)
 
   MSG_Link_Statistics(const CRSFFrame& frame);
+
+  CRSFFrame toFrame();
+};
 };
 
 }  // namespace crsf
