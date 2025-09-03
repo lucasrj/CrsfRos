@@ -1,10 +1,12 @@
 #include <asio/serial_port_base.hpp>
 #include <asio/serial_port.hpp>
 #include <libcrsfconn/serial_transport.hpp>
+#include <mutex>
 #include <thread>
 #include <iostream>
 
 #include <libcrsfconn/crsf.hpp>
+#include "libcrsfconn/framebuffer.hpp"
 #include "libcrsfconn/messages.hpp"
 #include <sys/ioctl.h>
 #include <linux/serial.h>
@@ -46,7 +48,7 @@ CRSFSerial::CRSFSerial(std::string device, unsigned baudrate, bool hwflow, ADDRE
 
     int fd = serial_dev_.native_handle();
 
-    struct termios2 tio = { 0 };
+    struct termios2 tio;
     if (ioctl(fd, TCGETS2, &tio) < 0)
     {
       throw std::runtime_error("TCGETS2 failed");
@@ -112,7 +114,7 @@ void CRSFSerial::connect(const ReceivedCb& message_cb) {
 }
 
 void CRSFSerial::close() {
-  std::lock_guard lock(mutex_);
+  std::lock_guard lock(tx_mutex_);
   if (!is_open())
     return;
 
@@ -128,20 +130,70 @@ void CRSFSerial::close() {
 
 void CRSFSerial::read(void) {
   Ptr sthis = shared_from_this();
-  serial_dev_.async_read_some(asio::buffer(rx_buf_),
+  serial_dev_.async_read_some(asio::buffer(rx_buffer_),
                               [sthis](asio::error_code error, size_t byte_transferred) {
                                 if (error)
                                 {
                                   sthis->close();
                                   return;
                                 }
-                                sthis->parse_buffer(sthis->rx_buf_.data(), byte_transferred);
+                                sthis->parse_buffer(sthis->rx_buffer_.data(), byte_transferred);
                                 sthis->read();
                               }
 
   );
 }
 
-void CRSFSerial::send_msg(const crsf::CRSFFrame* message [[maybe_unused]]) {
+void CRSFSerial::send_msg(const crsf::CRSFFrame* frame) {
+  if (!is_open())
+    return;
+
+  {
+    std::lock_guard lock(tx_mutex_);
+
+    tx_queue_.emplace_back(frame);
+  }
+  io_service_.post(std::bind(&CRSFSerial::write, shared_from_this(), true));
+}
+
+void CRSFSerial::write(bool check_tx_state) {
+  if (check_tx_state && tx_in_progress)
+    return;
+
+  std::lock_guard lock(tx_mutex_);
+
+  tx_in_progress = true;
+  Ptr sthis = shared_from_this();
+  FrameBuffer& buffer_refence = tx_queue_.front();
+  serial_dev_.async_write_some(asio::buffer(buffer_refence.at_curser(), buffer_refence.bytes_left()),
+                               [sthis, &buffer_refence](asio::error_code error, size_t bytes_transferred) {
+                                 if (error)
+                                 {
+                                   sthis->close();
+                                   return;
+                                 }
+                                 std::lock_guard lock(sthis->tx_mutex_);
+
+                                 if (sthis->tx_queue_.empty())
+                                 {
+                                   sthis->tx_in_progress = false;
+                                   return;
+                                 }
+
+                                 buffer_refence.curser_pos += bytes_transferred;
+                                 if (buffer_refence.bytes_left() == 0)
+                                 {
+                                   sthis->tx_queue_.pop_front();
+                                 }
+
+                                 if (!sthis->tx_queue_.empty())
+                                 {
+                                   sthis->write(false);
+                                 }
+                                 else
+                                 {
+                                   sthis->tx_in_progress = false;
+                                 }
+                               });
 }
 }  // namespace crsf

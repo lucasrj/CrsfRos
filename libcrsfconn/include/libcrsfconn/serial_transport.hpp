@@ -4,6 +4,8 @@
 #include <libcrsfconn/crsf.hpp>
 #include <libcrsfconn/messages.hpp>
 #include <string>
+#include <deque>
+#include <libcrsfconn/framebuffer.hpp>
 
 namespace crsf {
 
@@ -34,8 +36,10 @@ private:
   std::thread io_thread_;
   asio::serial_port serial_dev_;
 
-  std::recursive_mutex mutex_;
-  std::array<uint8_t, CRSFFrame::MAX_SIZE> rx_buf_;
+  std::recursive_mutex tx_mutex_;
+  std::array<uint8_t, CRSFFrame::MAX_SIZE> rx_buffer_;
+  std::deque<FrameBuffer> tx_queue_;
+  bool tx_in_progress = false;
 
   void read();
   void write(bool check_tx_state);
