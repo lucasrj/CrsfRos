@@ -24,11 +24,10 @@ void callback(const crsf::CRSFFrame* frame, const crsf::Frame_status status) {
                 << " crc check :" << int(status) << std::endl;
     }
   }
-  return;
   if (frame->type == crsf::MSG_TYPES::LINK_STATISTICS && frame->payload.size() == 10)
   {
     crsf::MSG_Link_Statistics link_stats(*frame);
-    std::cout << "rssi :" << unsigned(link_stats.down_rssi) << "  antenna:" << unsigned(link_stats.active_antenna)
+    std::cout << "rssi :" << unsigned(link_stats.down_rssi) << "  antenna:" << unsigned(link_stats.active_antenna) 
               << std::endl;
   }
 }
@@ -42,9 +41,24 @@ int main(int argc [[maybe_unused]], char** argv [[maybe_unused]]) {
 
   std::cout << "connected" << std::endl;
 
+  crsf::MSG_Attitude attidue_msg;
+
+  float value = -1;
+  float change = 0.01;
+
   while (true)
   {
-    std::cout << "sleeping" << std::endl;
+    // std::cout << "sleeping" << std::endl;
     std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    attidue_msg.setpitch(value);
+    attidue_msg.setroll(value);
+    attidue_msg.setyaw(value);
+    crsf::CRSFFrame frame =  attidue_msg.toFrame();
+    crsf_serial->send_msg(&frame);
+    value += change;
+    if (value >= 1){
+      change *= -1;
+    }
+
   }
 }
